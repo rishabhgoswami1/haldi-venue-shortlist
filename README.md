@@ -25,3 +25,27 @@
 - Family phone numbers or emails.
 - Anything from `09-legal/`.
 - The Airbnb host's private messages beyond the quoted reply (e.g. the Wi-Fi password one host sent).
+
+## Animated header (25 Nov)
+
+- "Haldi & Mehndi" title with Hindi "हल्दी · मेहंदी · संगीत" underneath.
+- A swaying marigold-and-mango-leaf toran (string garland) along the top.
+- Falling marigold petals.
+- A mehndi mandala that draws itself and slowly turns.
+- All of it is in `build.py` (`hero_svg()`) and `style.css`. Motion is turned off for anyone whose phone asks for reduced motion.
+
+## Accept / Reject for Divya (25 Nov)
+
+- Each venue has animated **Accept** and **Reject** buttons at the top and bottom of its card. Code: `decide.js`.
+- **Order:** accepted places move to the top under "💚 Accepted", rejected ones sink to the bottom under "✕ Rejected". Tapping the chosen button again undoes it.
+- **Animations:** accept bursts marigold petals and stamps "Accepted 💚"; reject shakes the card, dims it and stamps "Rejected".
+- **Tally:** a sticky bar shows the accepted / to-decide / rejected counts and whether the page is connected.
+- **Sharing:** choices are saved in Firebase Realtime Database and shared live with everyone who opens the link:
+  - project `phuket-trip-checklist` (rish.xi@gmail.com, free Spark plan, Singapore);
+  - path `/haldi/<venue-id>` = `"yes"` or `"no"`.
+- **Database rules** (published 25 Nov in the Firebase console):
+  - Anyone can read `/haldi`.
+  - Anyone can write `/haldi/<id>`, but only if the id matches `[a-z0-9-]{2,40}` and the value is `yes` or `no` (deleting is allowed).
+  - Everything else stays locked, and the Phuket `/ticks` rule is unchanged.
+- **Check her choices:** `curl -s https://phuket-trip-checklist-default-rtdb.asia-southeast1.firebasedatabase.app/haldi.json`
+- **Tested 25 Nov:** accept, reject, undo, and a write from another device appearing live. All test choices were deleted afterwards, so the database was empty at publish time.
