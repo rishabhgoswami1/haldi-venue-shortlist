@@ -157,11 +157,80 @@ VENUES = [
 
 OUT = [("Malhar Haveli, Sector 40 Noida", "Rajasthani haveli look, not our style (7 rooms, about 20–21 people)")]
 
+
+import math, random
+
+def hero_svg():
+    """Animated haldi + mehndi header: marigold toran, falling petals, self-drawing mehndi mandala."""
+    rnd = random.Random(28)
+    # --- marigold toran across the top ---
+    toran = ['<svg class="toran" viewBox="0 0 1000 120" preserveAspectRatio="xMidYMin slice" aria-hidden="true">',
+             '<defs><symbol id="mg" viewBox="-12 -12 24 24">'
+             + "".join(f'<circle cx="{7*math.cos(a*math.pi/6):.2f}" cy="{7*math.sin(a*math.pi/6):.2f}" r="4.3" fill="#f07c12"/>' for a in range(12))
+             + "".join(f'<circle cx="{4*math.cos(a*math.pi/4+0.3):.2f}" cy="{4*math.sin(a*math.pi/4+0.3):.2f}" r="3.4" fill="#f9a51a"/>' for a in range(8))
+             + '<circle r="3" fill="#ffcd3c"/><circle r="1.4" fill="#e06a0a"/></symbol>'
+             '<symbol id="leaf" viewBox="-6 0 12 30"><path d="M0 0 C7 8 6 22 0 30 C-6 22 -7 8 0 0Z" fill="#3f7d32"/><path d="M0 2 V28" stroke="#2c5b22" stroke-width=".8"/></symbol></defs>',
+             '<path d="M-10 8 Q 125 26 250 8 T 500 8 T 750 8 T 1010 8" fill="none" stroke="#c2410c" stroke-width="3"/>']
+    x = 12
+    i = 0
+    while x < 1000:
+        L = [34, 52, 70, 52][i % 4]
+        dur = 3.2 + (i % 5) * 0.35
+        toran.append(f'<g class="hang" style="animation-duration:{dur:.2f}s;animation-delay:-{(i%7)*0.4:.1f}s">'
+                     f'<line x1="{x}" y1="10" x2="{x}" y2="{L}" stroke="#b45309" stroke-width="1.2"/>'
+                     + "".join(f'<use href="#mg" x="{x-9}" y="{y-9}" width="18" height="18"/>' for y in range(14, L + 1, 14))
+                     + f'<use href="#mg" x="{x-11}" y="{L}" width="22" height="22"/></g>')
+        if i % 2 == 0:
+            toran.append(f'<g class="hang leafy" style="animation-duration:{dur+0.6:.2f}s"><use href="#leaf" x="{x+12}" y="8" width="11" height="28" transform="rotate(8 {x+17} 8)"/></g>')
+        x += 46
+        i += 1
+    toran.append('</svg>')
+    # --- falling petals ---
+    petals = []
+    for k in range(22):
+        left = rnd.uniform(0, 100); dur = rnd.uniform(7, 13); delay = rnd.uniform(-13, 0); size = rnd.uniform(9, 18)
+        drift = rnd.uniform(-60, 60)
+        if k % 4 == 0:
+            shape = f'<svg viewBox="-12 -12 24 24" width="{size+6:.0f}" height="{size+6:.0f}"><use href="#mg"/></svg>'
+        else:
+            col = rnd.choice(["#f59e0b", "#f97316", "#fbbf24", "#ea580c"])
+            shape = f'<svg viewBox="0 0 10 16" width="{size*0.65:.0f}" height="{size:.0f}"><path d="M5 0 C10 5 9 12 5 16 C1 12 0 5 5 0Z" fill="{col}"/></svg>'
+        petals.append(f'<span class="petal" style="left:{left:.1f}%;animation-duration:{dur:.1f}s;animation-delay:{delay:.1f}s;--drift:{drift:.0f}px">{shape}</span>')
+    # --- mehndi mandala (draws itself) ---
+    m = ['<svg class="mandala" viewBox="-130 -130 260 260" aria-hidden="true"><g class="spin">']
+    d = 0
+    def path(pd, w=2.2, extra=""):
+        nonlocal d
+        d += 1
+        return f'<path d="{pd}" class="draw" style="animation-delay:{0.15*d:.2f}s" stroke-width="{w}" {extra}/>'
+    m.append(path("M0 -10 A10 10 0 1 1 -0.01 -10Z", 2))
+    m.append(path("M0 -22 A22 22 0 1 1 -0.01 -22Z"))
+    for a in range(0, 360, 30):
+        m.append(f'<g transform="rotate({a})">' + path("M0 -24 Q10 -40 0 -58 Q-10 -40 0 -24Z") + path("M0 -30 Q4 -40 0 -50", 1) + '</g>')
+    m.append(path("M0 -64 A64 64 0 1 1 -0.01 -64Z", 1.2))
+    for a in range(0, 360, 22.5) if False else [i*22.5 for i in range(16)]:
+        m.append(f'<g transform="rotate({a})">' + path("M0 -68 Q16 -88 0 -110 Q-16 -88 0 -68Z") + path("M0 -76 Q6 -88 0 -100", 1) + '</g>')
+    for a in range(24):
+        ang = a * 15 * math.pi / 180
+        m.append(f'<circle class="dot" cx="{118*math.sin(ang):.1f}" cy="{-118*math.cos(ang):.1f}" r="2.6" style="animation-delay:{3+a*0.05:.2f}s"/>')
+    m.append('</g></svg>')
+    return "".join(toran), "".join(petals), "".join(m)
+
+TORAN, PETALS, MANDALA = hero_svg()
+
 BADGE = {"replied": ("Replied", "b-ok"), "partial": ("Partly replied", "b-mid"), "none": ("No proper reply yet", "b-wait")}
+
+def decide(vid, where):
+    return (f'<div class="decide {where}" data-id="{vid}">'
+            '<button type="button" class="dbtn yes" data-v="yes" aria-pressed="false"><span class="ico">💚</span><span class="lab">Accept</span><span class="shine"></span></button>'
+            '<button type="button" class="dbtn no" data-v="no" aria-pressed="false"><span class="ico">✕</span><span class="lab">Reject</span></button>'
+            '</div>')
 
 def card(v):
     b, cls = BADGE[v["status"]]
-    h = [f'<section class="venue" id="{v["id"]}">']
+    grp = "rep" if v["status"] != "none" else "wait"
+    h = [f'<section class="venue" id="{v["id"]}" data-id="{v["id"]}" data-grp="{grp}"><div class="stamp" aria-hidden="true"></div>']
+    h.append(decide(v["id"], "top"))
     h.append(f'<div class="vhead"><span class="badge {cls}">{b}</span>' + ('<span class="badge b-flag">⚠️ photos flagged</span>' if v.get("photo_flag") or v.get("extra") else '') + '</div>')
     h.append(f'<h2>{html.escape(v["name"])}</h2><div class="kind">{v["kind"]}</div>')
     rows = [("📍", "Where", f'{v["area"]}<small>{v["drive"]}</small>'), ("🛏️", "Sleeps", v["sleeps"]), ("💰", "Price", v["price"])]
@@ -182,12 +251,13 @@ def card(v):
     if v.get("extra"):
         e = v["extra"]
         h.append(f'<details class="gal"><summary>{e["title"]} ({len(e["photos"])})</summary><p class="pnote flag">{e["note"]}</p><div class="grid">' + "".join(f'<a href="{p}" target="_blank"><img src="{p}" loading="lazy" alt=""></a>' for p in e["photos"]) + '</div></details>')
+    h.append(decide(v["id"], "bottom"))
     h.append('</section>')
     return "\n".join(h)
 
 def summary_row(v):
     b, cls = BADGE[v["status"]]
-    return f'<a class="srow" href="#{v["id"]}"><span class="dot {cls}"></span><span class="sname">{html.escape(v["name"])}</span><span class="sinfo">{v["drive"].split(" from")[0].replace("<b>","").replace("</b>","")}</span></a>'
+    return f'<a class="srow" data-id="{v["id"]}" href="#{v["id"]}"><span class="dot {cls}"></span><span class="sname">{html.escape(v["name"])}</span><span class="sinfo">{v["drive"].split(" from")[0].replace("<b>","").replace("</b>","")}</span></a>'
 
 replied = [v for v in VENUES if v["status"] != "none"]
 waiting = [v for v in VENUES if v["status"] == "none"]
@@ -198,35 +268,47 @@ page = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Haldi Venue Shortlist</title>
+<title>Haldi & Mehndi Venues</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="hero"><div class="hero-inner">
-  <span class="eyebrow">💛 Haldi · Mehndi · Sangeet</span>
-  <h1>Venue shortlist</h1>
-  <p>Thu 28 Jan 2027 · about 50 guests · about 22 staying 27–30 Jan · within about an hour of Vaishali</p>
-  <div class="legend"><span>🟢 Replied</span><span>⏳ No proper reply</span><span>⚠️ Stock or edited photos flagged</span></div>
-</div></div>
+<header class="hero haldi">
+{TORAN}
+<div class="petals" aria-hidden="true">{PETALS}</div>
+{MANDALA}
+<div class="hero-inner">
+  <span class="eyebrow">🌼 Venue shortlist · Thu 28 Jan 2027</span>
+  <h1 class="title"><span class="w-haldi">Haldi</span> <span class="amp">&amp;</span> <span class="w-mehndi">Mehndi</span></h1>
+  <div class="hindi">हल्दी <span>·</span> मेहंदी <span>·</span> संगीत</div>
+  <svg class="swash" viewBox="0 0 300 20" aria-hidden="true"><path d="M5 12 C 60 2, 110 20, 150 10 S 240 2, 295 12"/></svg>
+  <p>About 50 guests for the day · about 22 staying 27–30 Jan · within about an hour of Vaishali</p>
+  <div class="legend"><span>💚 Accept</span><span>✕ Reject</span><span>⚠️ Stock or edited photos flagged</span></div>
+</div>
+</header>
 <main>
-<div class="rules">These are <b>first findings</b>, not bookings. Prices are what each place told us (or Airbnb showed for 27–30 Jan) and still need confirming. Tap a name to jump to it; tap a photo to open it full size.</div>
+<div class="rules">These are <b>first findings</b>, not bookings. Prices are what each place told us (or Airbnb showed for 27–30 Jan) and still need confirming.<br><b>Your call:</b> tap <span class="mini yes">💚 Accept</span> or <span class="mini no">✕ Reject</span> on each place (top or bottom of its card). Accepted places rise to the top, rejected ones sink to the bottom, and it's saved for both of us. Tap again to undo.</div>
+<div class="tally" id="tally"><span class="t-yes">💚 <b id="n-yes">0</b> accepted</span><span class="t-open">🤍 <b id="n-open">0</b> to decide</span><span class="t-no">✕ <b id="n-no">0</b> rejected</span><span class="sync" id="sync">Connecting…</span></div>
 
 <section class="summary"><h2>At a glance <small>{len(VENUES)} places</small></h2>
 <div class="slist">{"".join(summary_row(v) for v in VENUES)}</div></section>
 
-<h3 class="group">🟢 Replied ({len(replied)})</h3>
+<div class="board" id="board">
+<h3 class="group g-yes" id="g-yes" hidden>💚 Accepted</h3>
+<h3 class="group" id="g-rep">🟢 Replied: to decide</h3>
 {"".join(card(v) for v in replied)}
-
-<h3 class="group">⏳ No proper reply yet ({len(waiting)})</h3>
+<h3 class="group" id="g-wait">⏳ No proper reply yet</h3>
 {"".join(card(v) for v in waiting)}
+<h3 class="group g-no" id="g-no" hidden>✕ Rejected</h3>
+</div>
 
 <section><h2>Ruled out</h2>{"".join(f'<p class="note"><b>{a}</b>: {b}</p>' for a, b in OUT)}</section>
 
 <footer>Updated {UPDATED} · Confirm everything before paying any advance.</footer>
 </main>
+<script src="decide.js"></script>
 </body>
 </html>
 """
