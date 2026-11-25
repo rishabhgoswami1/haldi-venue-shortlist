@@ -50,7 +50,7 @@
 - **Check her choices:** `curl -s https://phuket-trip-checklist-default-rtdb.asia-southeast1.firebasedatabase.app/haldi.json`
 - **Tested 25 Nov:** accept, reject, undo, and a write from another device appearing live. All test choices were deleted afterwards, so the database was empty at publish time.
 
-## History dropdown (26 Nov)
+## History dropdown (25 Nov)
 
 - Rejected places no longer stay in the list. They go into a **closed "✕ Rejected · kept for history" dropdown** at the very bottom, together with the places ruled out earlier (Malhar Haveli).
 - Tapping "✕ n rejected" in the sticky bar opens the dropdown.
