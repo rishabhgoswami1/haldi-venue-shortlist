@@ -12,6 +12,7 @@
   rows.forEach(function (r, i) { r.dataset.idx = i; });
   var heads = { yes: byId("g-yes"), rep: byId("g-rep"), wait: byId("g-wait"), no: byId("g-no") };
   var syncEl = byId("sync");
+  var rejlist = byId("rejlist");
   var state = {};
   var first = true;
 
@@ -36,8 +37,10 @@
     ["yes", "rep", "wait", "no"].forEach(function (g) {
       board.appendChild(heads[g]);
       heads[g].hidden = groups[g].length === 0;
-      groups[g].forEach(function (c) { board.appendChild(c); });
+      groups[g].forEach(function (c) { (g === "no" ? rejlist : board).appendChild(c); });
     });
+    heads.no.hidden = false; // always shown: also holds the places ruled out earlier
+    byId("rej-n").textContent = groups.no.length + document.querySelectorAll("#g-no .ruled").length;
 
     cards.forEach(function (c) {
       var d = state[c.dataset.id] || "";
@@ -61,13 +64,22 @@
       });
     }
 
+    var label = { yes: "💚 Accepted", rep: "🟢 Replied: to decide", wait: "⏳ No proper reply yet" };
+    ["yes", "rep", "wait"].forEach(function (g) {
+      var n = groups[g].length;
+      heads[g].textContent = label[g] + " (" + (n ? n : g === "yes" ? "nothing yet" : 0) + ")";
+    });
+    heads.yes.hidden = false; // always visible, "(nothing yet)" until something is accepted
+
     byId("n-yes").textContent = groups.yes.length;
     byId("n-no").textContent = groups.no.length;
     byId("n-open").textContent = groups.rep.length + groups.wait.length;
 
     if (animate && !reduce) {
       cards.forEach(function (c) {
-        var dy = before[c.dataset.id] - c.getBoundingClientRect().top;
+        var rect = c.getBoundingClientRect();
+        if (!rect.height) return; // tucked inside the closed "Rejected" dropdown
+        var dy = before[c.dataset.id] - rect.top;
         if (dy && c.animate) c.animate([{ transform: "translateY(" + dy + "px)" }, { transform: "none" }], { duration: 750, easing: "cubic-bezier(.2,.85,.25,1)" });
       });
     }
@@ -100,11 +112,12 @@
     if (next) state[id] = next; else delete state[id];
     cache();
     if (next === "yes") { burst(btn, "yes"); flash(c, "pop-yes"); }
-    if (next === "no") { burst(btn, "no"); flash(c, "pop-no"); }
+    if (next === "no") { burst(btn, "no"); flash(c, "pop-no"); if (!heads.no.open) setTimeout(function () { c.classList.add("leaving"); }, 300); }
     // let the card react in place first, then glide to its new spot
     setTimeout(function () {
       render(true);
-      if (next && !reduce) setTimeout(function () { c.scrollIntoView({ behavior: "smooth", block: "start" }); }, 780);
+      c.classList.remove("leaving");
+      if (next === "yes" && !reduce) setTimeout(function () { c.scrollIntoView({ behavior: "smooth", block: "start" }); }, 780);
     }, reduce ? 0 : 520);
     var req = next
       ? fetch(DB + "/" + id + ".json", { method: "PUT", body: JSON.stringify(next) })
@@ -155,6 +168,13 @@
       .catch(function () { setSync("⚠️ Offline: showing the last saved choices", false); });
     setTimeout(poll, 15000);
   }
+
+  var tno = document.querySelector(".tally .t-no");
+  if (tno) tno.addEventListener("click", function () {
+    if (heads.no.hidden) return;
+    heads.no.open = true;
+    heads.no.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
 
   render(false);
   connect();

@@ -301,10 +301,8 @@ page = f"""<!doctype html>
 {"".join(card(v) for v in replied)}
 <h3 class="group" id="g-wait">⏳ No proper reply yet</h3>
 {"".join(card(v) for v in waiting)}
-<h3 class="group g-no" id="g-no" hidden>✕ Rejected</h3>
+<details class="rejbox" id="g-no"><summary><span class="rt">✕ Rejected</span><small id="rej-n">0</small><em>Kept for history · tap to open</em></summary><div class="rejlist" id="rejlist"></div>{"".join(f'<p class="note ruled"><b>{a}</b> (ruled out earlier): {b}</p>' for a, b in OUT)}</details>
 </div>
-
-<section><h2>Ruled out</h2>{"".join(f'<p class="note"><b>{a}</b>: {b}</p>' for a, b in OUT)}</section>
 
 <footer>Updated {UPDATED} · Confirm everything before paying any advance.</footer>
 </main>
